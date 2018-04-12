@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>两个table左右移数据</title>
+	<meta charset="utf-8 text/html">
+	<link rel="stylesheet" type="text/css" href="">
+	<script type="text/javascript" src="../../../lib/js/jquery/jquery.js"></script>
+	<style type="text/css">
+		.bookTable {
+			border-collapse: collapse;
+			border-spacing: 0;
+			border: 1px solid #DDD;
+			width: 345px;
+			height: 280px;
+			table-layout: fixed;
+		}
+		.bookTheadTr {
+			display: block;
+			background-color: #f4fbfe;
+			color: #44abe5;
+		}
+		.bookTheadTh {
+			border-bottom: 1px solid #CCC;
+			border-left: none;
+			border-right: 1px solid #CCC;
+			border-top: none;
+			color: #44abe5;
+			padding: 0 4px;
+			width: 100px;
+			min-width: 100px;
+			max-width: 100px;
+			height: 16px;
+			font-size: 14px;
+			overflow: hidden;
+		}
+
+		.selectedTbody {
+			display: block;
+			height: 262px;
+			width: 345px;
+			overflow-y: auto;
+		}
+
+		.selectedTbodyTd {
+			width: 100px;
+			min-width: 100px;
+			max-width: 100px;
+			height: 16px;
+			border-bottom: 1px solid #DDD;
+			border-left: none;
+			border-right: 1px solid #CCC;
+			border-top: none;
+			color: #404060;
+			padding: 0 4px;
+			font-size: 12px;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
+		.selectedTbodyTr {
+			background-color: #ffffff;
+			height: 16px;
+			padding: 0 4px;
+		}
+
+		.selectedTbodyTr:hover {
+			background-color: #f0f0f0;
+			height: 16px;
+			padding: 0 4px;
+		}
+
+		.selected {
+			background-color: #dbecf9;
+		}
+
+		.table-div {
+			width: 345px;
+			height: 283px;
+			border-bottom: 1px solid #CCC;
+			border-left: none;
+			border-right: none;
+			border-top: none;
+			overflow-x: hidden;
+			overflow-y: hidden;
+		}
+		.labelTitle {
+			color: #349FD3;
+			font-size: 14px;
+			font-weight: 800;
+		}
+	</style>
+</head>
+<body>
+	<div style="float: left;">
+		<div style="float: left;">
+			<label class="labelTitle">可选图书</label>
+			<div class="table-div">
+				<table class="bookTable">
+					<thead class="bookThead">
+						<tr class="bookTheadTr">
+							<th class="bookTheadTh">书籍名称</th>
+							<th class="bookTheadTh">作者</th>
+							<th class="bookTheadTh">类型</th>
+							<th style='display:none;'>类型id</th>
+						</tr>
+					</thead>
+					<tbody id="selectTbodyId" class="selectedTbody"></tbody>
+				</table>
+			</div>
+		</div>
+		<div style="width: 50px;height: 100px;margin-top: 100px;float: left;">
+			<div>
+				<input type="button" id="itemAddBtn" value=">>" />
+			</div>
+			<div style="margin-top: 30px;">
+				<input type="button" id="itemDelBtn" value="<<" />
+			</div>
+		</div>
+		<div style="float: left;">
+			<label class="labelTitle">已选图书</label>
+			<div class=" table-div">
+				<table class="bookTable">
+					<thead class="bookThead">
+						<tr class="bookTheadTr">
+							<th class="bookTheadTh">书籍名称</th>
+							<th class="bookTheadTh">作者</th>
+							<th class="bookTheadTh">类型</th>
+							<th style='display:none;'>类型id</th>
+						</tr>
+					</thead>
+					<tbody id="selectedTbodyId" class="selectedTbody"></tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script>
+        $(document).ready(function(){
+            initBookDatasValue();
+            qryEvent();
+            initEvent();
+        });
+     function initEvent(){
+		$('#itemAddBtn').off('click').on('click',function(){
+			itemAddBtnEvent();
+		});
+		$('#itemDelBtn').off('click').on('click',function(){
+			itemDelBtnEvent();
+		})
+     }
+		//查询
+		function qryEvent() {
+			if (bookDatas) {
+				$("#selectTbodyId").html("");
+				var $trTemp = "";
+				for (var i = 0; i < bookDatas.length; i++) {
+					$trTemp = $("<tr class='selectedTbodyTr'></tr>");
+					$trTemp.append("<td class='selectedTbodyTd'>" + bookDatas[i].bookName + "</td>");
+					$trTemp.append("<td class='selectedTbodyTd'>" + bookDatas[i].author + "</td>");
+					$trTemp.append("<td class='selectedTbodyTd'>关键人物</td>");
+					$trTemp.append("<td style='display:none;'>" + bookDatas[i].bookType + "</td>");
+					$trTemp.appendTo("#selectTbodyId");
+				}
+				$("#selectTbodyId tr").off('click').on('click', function () {
+					$(this).toggleClass("selected")
+				});
+			}
+		}
+
+		//添加
+		function itemAddBtnEvent() {
+			// 判断是否选中待添加书籍
+			var selectTrDatas = $("#selectTbodyId").children(".selected");
+			if (selectTrDatas == null || selectTrDatas == ""
+				|| selectTrDatas.length == 0) {
+				$.messager.alert('提示', '请选择待添加书籍！');
+			}
+
+			for (var i = 0; i < selectTrDatas.length; i++) {
+				var flag = false;
+				//可选书籍信息
+				var selectTdDatas = selectTrDatas.eq(i).children('td');
+				//已选书籍信息
+				var selectedTrDatas = $("#selectedTbodyId tr");
+				//1. 判断是否已被选
+				for (var j = 0; j < selectedTrDatas.length; j++) {
+					var selectedTdDatas = selectedTrDatas.eq(j).children('td');
+					if (selectTdDatas.eq(1).text() == selectedTdDatas.eq(1).text()) {
+						flag = true; break;
+					}
+				}
+				//2.不存在，则在已选书籍表格中添加信息;在可选书籍信息表格中删除[隐藏]信息
+				if (!flag) {
+					//2.1 在已选书籍表格中添加信息
+					var $trTemp = $("<tr class='selectedTbodyTr'></tr>");
+					$trTemp.append("<td class='selectedTbodyTd'>" + selectTdDatas.eq(0).text() + "</td>");
+					$trTemp.append("<td class='selectedTbodyTd'>" + selectTdDatas.eq(1).text() + "</td>");
+					$trTemp.append("<td class='selectedTbodyTd'>" + selectTdDatas.eq(2).text() + "</td>");
+					$trTemp.append("<td style='display:none;'>" + selectTdDatas.eq(3).text() + "</td>");
+					$trTemp.appendTo("#selectedTbodyId");
+					$("#selectedTbodyId tr").off('click').on('click', function () {
+						$(this).toggleClass("selected")
+					});
+					//2.2 在可选书籍信息表格中删除[隐藏]信息
+					selectTrDatas.eq(i).removeClass("selected").hide();
+				}
+			}
+		}
+		//删除
+		function itemDelBtnEvent() {
+			// 判断是否选中待删除书籍
+			var selectedTrDatas = $("#selectedTbodyId").children(".selected");
+			if (selectedTrDatas == null || selectedTrDatas == ""
+				|| selectedTrDatas.length == 0) {
+				$.messager.alert('提示', '请选择待删除书籍');
+			}
+			for (var i = 0; i < selectedTrDatas.length; i++) {
+				//已选书籍信息
+				var selectedTdDatas = selectedTrDatas.eq(i).children('td');
+				//可选书籍信息
+				var canSelectTrDatas = $("#selectTbodyId tr");
+				//1. 判断待删除的书籍信息是否存在可选书籍表格中，若存在，则显示
+				for (var j = 0; j < canSelectTrDatas.length; j++) {
+					var canSelectTdDatas = canSelectTrDatas.eq(j).children('td');
+					if (canSelectTdDatas.eq(1).text() == selectedTdDatas.eq(1).text()) {
+						//在可选书籍表格中重新显示该书籍信息
+						canSelectTrDatas.eq(j).show();
+					}
+				}
+				//2.在已选书籍信息表格中删除被选中的书籍信息
+				selectedTrDatas.eq(i).remove();
+			}
+		}
+
+		function initBookDatasValue(){
+			for(var i=0;i<3;i++){
+				bookDatas.push(new BookData('《CSS权威指南》'+i,"Meyer"+i,'前端'));
+			}
+			for(var i=0;i<3;i++){
+				bookDatas.push(new BookData('《图解Http》'+i,"who"+i,'网络'));
+			}
+		}
+		
+		var bookDatas = new Array();
+		
+		function BookData(bookName,author,bookType){
+			this.bookName = bookName;
+			this.author = author;
+			this.bookType = bookType;
+		}
+
+	</script>
+</body>
+</html>
